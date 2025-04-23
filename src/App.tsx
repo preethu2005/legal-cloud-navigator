@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import HomePage from "@/pages/HomePage";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -31,7 +30,6 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
-        <Footer />
       </div>
     </BrowserRouter>
   </TooltipProvider>
