@@ -27,7 +27,7 @@ const AskLegalAI: React.FC = () => {
       const simulatedResponse = getSimulatedResponse(query);
       setResponse(simulatedResponse);
     } catch (err) {
-      setError('Failed to get a response from our legal AI. Please try again.');
+      setError('Failed to get a response from our legal chatbot. Please try again.');
       console.error('Error getting legal advice:', err);
     } finally {
       setIsLoading(false);
@@ -98,7 +98,7 @@ Would you like me to help you find a legal professional who specializes in this 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-serif font-semibold mb-2">Legal AI Assistant</h1>
+        <h1 className="text-3xl font-serif font-semibold mb-2">Legal Chat Bot</h1>
         <p className="text-muted-foreground">
           Ask our AI for preliminary legal guidance on your questions
         </p>
@@ -140,7 +140,7 @@ Would you like me to help you find a legal professional who specializes in this 
       {response && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">AI Legal Response</CardTitle>
+            <CardTitle className="text-lg font-medium">Chat Bot Response</CardTitle>
             <CardDescription>
               Preliminary guidance based on your query
             </CardDescription>
@@ -172,7 +172,7 @@ Would you like me to help you find a legal professional who specializes in this 
           <CardHeader>
             <CardTitle className="text-lg font-medium">Suggested Questions</CardTitle>
             <CardDescription>
-              Common legal questions you can ask our AI assistant
+              Common legal questions you can ask our chat bot
             </CardDescription>
           </CardHeader>
           <CardContent>

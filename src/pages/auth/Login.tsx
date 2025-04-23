@@ -6,7 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onLogin?: (email: string, password: string) => boolean;
+}
+
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,15 +23,24 @@ const Login: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // This would typically use Firebase auth
-      console.log('Login with:', email, password);
-      
-      // Simulate successful login
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
+      // Use the onLogin prop if available, otherwise just log
+      if (onLogin) {
+        const success = onLogin(email, password);
+        if (success) {
+          navigate('/dashboard');
+        }
+      } else {
+        // This would typically use Firebase auth
+        console.log('Login with:', email, password);
+        
+        // Simulate successful login
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+      }
     } catch (err) {
       setError('Failed to log in. Please check your credentials and try again.');
+    } finally {
       setIsLoading(false);
     }
   };

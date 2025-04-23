@@ -4,7 +4,12 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, FileText, MessageSquare, Clock, Plus } from 'lucide-react';
+import { Calendar, FileText, MessageSquare, Clock, Plus, Upload } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+
+interface DashboardProps {
+  userRole?: string;
+}
 
 enum CaseStatus {
   NEW = "new",
@@ -67,6 +72,35 @@ const mockCases = [
   }
 ];
 
+// Mock lawyer-specific cases
+const mockLawyerCases = [
+  ...mockCases,
+  {
+    id: '4',
+    clientId: '456',
+    title: 'Corporate Merger Review',
+    description: 'Review of proposed merger between ABC Corp and XYZ Inc',
+    category: 'Corporate Law',
+    status: CaseStatus.IN_PROGRESS,
+    priority: 'high',
+    documents: [],
+    createdAt: new Date(2023, 8, 5),
+    updatedAt: new Date(2023, 8, 10),
+  },
+  {
+    id: '5',
+    clientId: '789',
+    title: 'Tax Liability Assessment',
+    description: 'Review of tax implications for international business operations',
+    category: 'Tax Law',
+    status: CaseStatus.NEW,
+    priority: 'medium',
+    documents: [],
+    createdAt: new Date(2023, 8, 12),
+    updatedAt: new Date(2023, 8, 12),
+  }
+];
+
 const mockAppointments = [
   {
     id: '1',
@@ -81,6 +115,23 @@ const mockAppointments = [
     lawyerName: 'Michael Johnson',
     date: new Date(2023, 8, 18, 14, 0),
     status: 'confirmed',
+  }
+];
+
+const mockDocuments = [
+  {
+    id: '1',
+    name: 'Employment Contract.pdf',
+    size: '2.4 MB',
+    uploadedAt: new Date(2023, 7, 28),
+    caseId: '1',
+  },
+  {
+    id: '2',
+    name: 'Property Deed.pdf',
+    size: '1.8 MB',
+    uploadedAt: new Date(2023, 8, 2),
+    caseId: '3',
   }
 ];
 
@@ -99,17 +150,22 @@ const mockQueries = [
   }
 ];
 
-const Dashboard: React.FC = () => {
+const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   const [activeCases, setActiveCases] = useState<LegalCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [documents, setDocuments] = useState(mockDocuments);
 
   useEffect(() => {
     // Simulate loading data from Firebase
     setTimeout(() => {
-      setActiveCases(mockCases);
+      if (userRole === 'lawyer') {
+        setActiveCases(mockLawyerCases);
+      } else {
+        setActiveCases(mockCases);
+      }
       setIsLoading(false);
     }, 1000);
-  }, []);
+  }, [userRole]);
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -146,16 +202,57 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleUploadDocument = () => {
+    // This would typically open a file picker and upload to Firebase storage
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.doc,.docx,.txt';
+    
+    input.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.files && target.files.length > 0) {
+        const file = target.files[0];
+        
+        // Mock upload
+        setTimeout(() => {
+          // Add new document to list
+          const newDoc = {
+            id: Date.now().toString(),
+            name: file.name,
+            size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+            uploadedAt: new Date(),
+            caseId: '1', // Would be set based on selection in a real app
+          };
+          
+          setDocuments(prev => [newDoc, ...prev]);
+          toast({
+            title: "Document uploaded",
+            description: `${file.name} has been uploaded successfully.`,
+          });
+        }, 1500);
+      }
+    };
+    
+    input.click();
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-serif font-semibold">Dashboard</h1>
+        <h1 className="text-3xl font-serif font-semibold">
+          {userRole === 'lawyer' ? 'Lawyer Dashboard' : 'Client Dashboard'}
+        </h1>
         <div className="flex space-x-4">
           <Button asChild>
             <Link to="/cases/new" className="flex items-center">
               <Plus className="mr-2 h-4 w-4" /> New Case
             </Link>
           </Button>
+          {userRole === 'client' && (
+            <Button variant="outline" onClick={handleUploadDocument}>
+              <Upload className="mr-2 h-4 w-4" /> Upload Document
+            </Button>
+          )}
         </div>
       </div>
 
@@ -167,7 +264,12 @@ const Dashboard: React.FC = () => {
               <FileText className="mr-2 h-5 w-5 text-muted-foreground" />
               Active Cases
             </CardTitle>
-            <CardDescription>{activeCases.length} cases in progress</CardDescription>
+            <CardDescription>
+              {userRole === 'lawyer' 
+                ? `${mockLawyerCases.length} cases assigned to you`
+                : `${activeCases.length} cases in progress`
+              }
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Link to="/cases" className="text-primary hover:underline text-sm">
@@ -192,19 +294,39 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Queries */}
+        {/* Recent Queries or Documents */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-medium flex items-center">
-              <MessageSquare className="mr-2 h-5 w-5 text-muted-foreground" />
-              Legal Queries
+              {userRole === 'lawyer' ? (
+                <>
+                  <FileText className="mr-2 h-5 w-5 text-muted-foreground" />
+                  Recent Documents
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="mr-2 h-5 w-5 text-muted-foreground" />
+                  Legal Chat Bot
+                </>
+              )}
             </CardTitle>
-            <CardDescription>{mockQueries.length} recent inquiries</CardDescription>
+            <CardDescription>
+              {userRole === 'lawyer' 
+                ? `${documents.length} documents uploaded`
+                : `${mockQueries.length} recent inquiries`
+              }
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link to="/legal-ai" className="text-primary hover:underline text-sm">
-              Ask a new question
-            </Link>
+            {userRole === 'lawyer' ? (
+              <Button variant="ghost" onClick={handleUploadDocument} className="text-primary p-0 h-auto hover:bg-transparent hover:underline">
+                Review documents
+              </Button>
+            ) : (
+              <Link to="/legal-ai" className="text-primary hover:underline text-sm">
+                Ask a new question
+              </Link>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -213,15 +335,23 @@ const Dashboard: React.FC = () => {
         <TabsList>
           <TabsTrigger value="cases">My Cases</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
-          <TabsTrigger value="queries">Legal Queries</TabsTrigger>
+          {userRole === 'lawyer' ? (
+            <TabsTrigger value="documents">Client Documents</TabsTrigger>
+          ) : (
+            <TabsTrigger value="queries">Legal Queries</TabsTrigger>
+          )}
         </TabsList>
         
         <TabsContent value="cases">
           <Card>
             <CardHeader>
-              <CardTitle>Active Legal Cases</CardTitle>
+              <CardTitle>
+                {userRole === 'lawyer' ? 'Assigned Cases' : 'Active Legal Cases'}
+              </CardTitle>
               <CardDescription>
-                Manage your ongoing legal matters
+                {userRole === 'lawyer' 
+                  ? 'Cases currently assigned to you for review'
+                  : 'Manage your ongoing legal matters'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -271,7 +401,9 @@ const Dashboard: React.FC = () => {
             <CardHeader>
               <CardTitle>Scheduled Appointments</CardTitle>
               <CardDescription>
-                Your upcoming consultations with legal professionals
+                {userRole === 'lawyer' 
+                  ? 'Upcoming consultations with clients'
+                  : 'Your upcoming consultations with legal professionals'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -279,7 +411,9 @@ const Dashboard: React.FC = () => {
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">No appointments scheduled</p>
                   <Button asChild className="mt-4">
-                    <Link to="/appointments/schedule">Schedule Consultation</Link>
+                    <Link to="/appointments/schedule">
+                      {userRole === 'lawyer' ? 'Set Availability' : 'Schedule Consultation'}
+                    </Link>
                   </Button>
                 </div>
               ) : (
@@ -288,7 +422,11 @@ const Dashboard: React.FC = () => {
                     <div key={appointment.id} className="flex justify-between items-center p-4 bg-card rounded-md border border-border">
                       <div>
                         <p className="font-medium">{appointment.title}</p>
-                        <p className="text-sm text-muted-foreground">with {appointment.lawyerName}</p>
+                        {userRole === 'lawyer' ? (
+                          <p className="text-sm text-muted-foreground">with Client Name</p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">with {appointment.lawyerName}</p>
+                        )}
                         <p className="text-sm mt-1">{formatDateTime(appointment.date)}</p>
                       </div>
                       <div>
@@ -306,51 +444,95 @@ const Dashboard: React.FC = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="queries">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Legal Queries</CardTitle>
-              <CardDescription>
-                Questions you've asked our AI legal assistant
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {mockQueries.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">No legal queries found</p>
-                  <Button asChild className="mt-4">
-                    <Link to="/legal-ai">Ask a Question</Link>
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {mockQueries.map((query) => (
-                    <div key={query.id} className="p-4 bg-card rounded-md border border-border">
-                      <p className="font-medium">{query.question}</p>
-                      <div className="flex justify-between mt-2">
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(query.timestamp)}
-                        </span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          query.status === 'answered' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {query.status}
-                        </span>
+        {/* Conditional tab content based on user role */}
+        {userRole === 'lawyer' ? (
+          <TabsContent value="documents">
+            <Card>
+              <CardHeader>
+                <CardTitle>Client Documents</CardTitle>
+                <CardDescription>
+                  Documents uploaded by your clients for review
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {documents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No documents available</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {documents.map((doc) => (
+                      <div key={doc.id} className="flex justify-between items-center p-4 bg-card rounded-md border border-border">
+                        <div>
+                          <p className="font-medium">{doc.name}</p>
+                          <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                            <span>{doc.size}</span>
+                            <span>•</span>
+                            <span>Uploaded {formatDate(doc.uploadedAt)}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            Download
+                          </Button>
+                          <Button variant="secondary" size="sm">
+                            Review
+                          </Button>
+                        </div>
                       </div>
-                      <Button variant="ghost" size="sm" className="mt-2 w-full" asChild>
-                        <Link to={`/legal-ai/${query.id}`}>
-                          View Answer
-                        </Link>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ) : (
+          <TabsContent value="queries">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Legal Queries</CardTitle>
+                <CardDescription>
+                  Questions you've asked our Legal Chat Bot
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {mockQueries.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No legal queries found</p>
+                    <Button asChild className="mt-4">
+                      <Link to="/legal-ai">Ask a Question</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {mockQueries.map((query) => (
+                      <div key={query.id} className="p-4 bg-card rounded-md border border-border">
+                        <p className="font-medium">{query.question}</p>
+                        <div className="flex justify-between mt-2">
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(query.timestamp)}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            query.status === 'answered' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {query.status}
+                          </span>
+                        </div>
+                        <Button variant="ghost" size="sm" className="mt-2 w-full" asChild>
+                          <Link to={`/legal-ai/${query.id}`}>
+                            View Answer
+                          </Link>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

@@ -10,7 +10,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 enum UserRole {
   CLIENT = "client",
   LAWYER = "lawyer",
-  ADMIN = "admin",
 }
 
 const Register: React.FC = () => {
@@ -22,6 +21,11 @@ const Register: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // For lawyer role
+  const [barNumber, setBarNumber] = useState('');
+  const [specialization, setSpecialization] = useState('');
+  const [yearsOfExperience, setYearsOfExperience] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +41,9 @@ const Register: React.FC = () => {
     try {
       // This would typically use Firebase auth
       console.log('Register with:', email, password, fullName, role);
+      if (role === UserRole.LAWYER) {
+        console.log('Lawyer details:', barNumber, specialization, yearsOfExperience);
+      }
       
       // Simulate successful registration
       setTimeout(() => {
@@ -107,7 +114,12 @@ const Register: React.FC = () => {
             </div>
             <div className="space-y-2">
               <Label>I am registering as:</Label>
-              <RadioGroup defaultValue={UserRole.CLIENT} className="mt-2">
+              <RadioGroup 
+                defaultValue={UserRole.CLIENT} 
+                value={role}
+                onValueChange={(value) => setRole(value as UserRole)}
+                className="mt-2"
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value={UserRole.CLIENT} id="client" />
                   <Label htmlFor="client">A client seeking legal advice</Label>
@@ -118,6 +130,45 @@ const Register: React.FC = () => {
                 </div>
               </RadioGroup>
             </div>
+
+            {/* Additional fields for lawyers */}
+            {role === UserRole.LAWYER && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="barNumber">Bar License Number</Label>
+                  <Input
+                    id="barNumber"
+                    placeholder="e.g., 123456"
+                    value={barNumber}
+                    onChange={(e) => setBarNumber(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="specialization">Specialization</Label>
+                  <Input
+                    id="specialization"
+                    placeholder="e.g., Family Law, Corporate Law"
+                    value={specialization}
+                    onChange={(e) => setSpecialization(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="experience">Years of Experience</Label>
+                  <Input
+                    id="experience"
+                    type="number"
+                    placeholder="e.g., 5"
+                    value={yearsOfExperience}
+                    onChange={(e) => setYearsOfExperience(e.target.value)}
+                    required
+                    min="0"
+                  />
+                </div>
+              </>
+            )}
+            
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Creating account...' : 'Create Account'}
             </Button>
