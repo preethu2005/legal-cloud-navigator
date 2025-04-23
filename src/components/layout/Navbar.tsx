@@ -1,33 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
-const Navbar: React.FC = () => {
-  // Mock auth state for demo
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
+interface NavbarProps {
+  isAuthenticated?: boolean;
+  userRole?: string | null;
+  onLogout?: () => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ 
+  isAuthenticated = false, 
+  userRole = null,
+  onLogout = () => {} 
+}) => {
   const navigate = useNavigate();
   
-  // Simulate checking auth status
-  useEffect(() => {
-    // This would check Firebase auth in a real app
-    const checkAuth = () => {
-      // Mock check if user is on auth-required pages
-      const path = window.location.pathname;
-      if (path.includes('/dashboard') || path.includes('/cases')) {
-        if (!isAuthenticated) {
-          navigate('/login');
-        }
-      }
-    };
-    
-    checkAuth();
-  }, [isAuthenticated, navigate]);
-  
   const handleLogout = () => {
-    // This would sign out using Firebase in a real app
-    setIsAuthenticated(false);
+    onLogout();
     navigate('/');
   };
 

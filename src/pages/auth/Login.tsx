@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/hooks/use-toast';
 
 interface LoginProps {
   onLogin?: (email: string, password: string) => boolean;
@@ -27,6 +28,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       if (onLogin) {
         const success = onLogin(email, password);
         if (success) {
+          toast({
+            title: "Login successful",
+            description: "Welcome back to LegalCloud Advisor!",
+          });
           navigate('/dashboard');
         }
       } else {

@@ -64,7 +64,7 @@ const App = () => {
       <Sonner />
       <BrowserRouter>
         <div className="min-h-screen flex flex-col">
-          <Navbar />
+          <Navbar isAuthenticated={isAuthenticated} userRole={userRole} onLogout={handleLogout} />
           <div className="flex-grow">
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -77,7 +77,7 @@ const App = () => {
               <Route element={<PrivateRoute isAuthenticated={isAuthenticated} />}>
                 <Route path="/dashboard" element={<Dashboard userRole={userRole || 'client'} />} />
                 <Route path="/legal-ai" element={<AskLegalAI />} />
-                <Route path="/cases" element={<Cases userRole={userRole || 'client'} />} />
+                <Route path="/cases" element={<Cases />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />
