@@ -3,8 +3,26 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, FileText, MessageSquare, Clock, Plus, Upload } from 'lucide-react';
+import { 
+  Calendar, FileText, MessageSquare, Clock, Plus, Upload, 
+  Trash2, Edit, X, Check, Download
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DashboardProps {
   userRole?: string;
@@ -31,7 +49,23 @@ interface LegalCase {
   updatedAt: Date;
 }
 
-// Mock data for demonstration
+interface Appointment {
+  id: string;
+  title: string;
+  lawyerName: string;
+  date: Date;
+  status: 'scheduled' | 'confirmed' | 'cancelled';
+  clientName?: string;
+}
+
+interface Document {
+  id: string;
+  name: string;
+  size: string;
+  uploadedAt: Date;
+  caseId: string;
+}
+
 const mockCases = [
   {
     id: '1',
@@ -71,7 +105,6 @@ const mockCases = [
   }
 ];
 
-// Mock lawyer-specific cases
 const mockLawyerCases = [
   ...mockCases,
   {
@@ -105,14 +138,16 @@ const mockAppointments = [
     id: '1',
     title: 'Initial Consultation',
     lawyerName: 'Sarah Mitchell',
-    date: new Date(2023, 8, 15, 10, 30),
+    clientName: 'John Doe',
+    date: new Date(2025, 4, 15, 10, 30),
     status: 'scheduled',
   },
   {
     id: '2',
     title: 'Contract Review',
     lawyerName: 'Michael Johnson',
-    date: new Date(2023, 8, 18, 14, 0),
+    clientName: 'Jane Smith',
+    date: new Date(2025, 4, 18, 14, 0),
     status: 'confirmed',
   }
 ];
@@ -150,13 +185,24 @@ const mockQueries = [
 ];
 
 const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
-  const [documents, setDocuments] = useState(mockDocuments);
-  const [appointments, setAppointments] = useState(mockAppointments);
+  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
+  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
   const [activeCases, setActiveCases] = useState<LegalCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const [newAppointment, setNewAppointment] = useState({
+    title: '',
+    date: new Date(),
+    time: '09:00',
+    lawyerName: userRole === 'client' ? '' : 'N/A',
+    clientName: userRole === 'lawyer' ? '' : 'N/A',
+  });
+  
+  const [editingAppointment, setEditingAppointment] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  
   useEffect(() => {
-    // Simulate loading data from Firebase
     setTimeout(() => {
       if (userRole === 'lawyer') {
         setActiveCases(mockLawyerCases);
@@ -168,21 +214,11 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   }, [userRole]);
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
+    return format(date, 'PPP');
   };
 
   const formatDateTime = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+    return format(date, 'PPP p');
   };
 
   const getStatusColor = (status: string) => {
@@ -232,17 +268,70 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   };
 
   const handleDownloadDocument = (docName: string) => {
-    // In a real app, this would download from your storage
     toast({
       title: "Download started",
       description: `Downloading ${docName}...`,
     });
   };
 
-  const handleManageAppointment = (appointmentId: string) => {
+  const handleDeleteDocument = (docId: string) => {
+    setDocuments(prev => prev.filter(doc => doc.id !== docId));
     toast({
-      title: "Appointment management",
-      description: "This feature will be available soon.",
+      title: "Document deleted",
+      description: "The document has been removed from your files.",
+    });
+  };
+
+  const handleCreateAppointment = () => {
+    const [hours, minutes] = newAppointment.time.split(':').map(Number);
+    const appointmentDate = new Date(selectedDate || new Date());
+    appointmentDate.setHours(hours, minutes, 0);
+    
+    const newAppointmentObj: Appointment = {
+      id: Date.now().toString(),
+      title: newAppointment.title,
+      lawyerName: userRole === 'lawyer' ? 'You' : newAppointment.lawyerName,
+      clientName: userRole === 'client' ? 'You' : newAppointment.clientName,
+      date: appointmentDate,
+      status: 'scheduled',
+    };
+    
+    setAppointments(prev => [newAppointmentObj, ...prev]);
+    
+    setNewAppointment({
+      title: '',
+      date: new Date(),
+      time: '09:00',
+      lawyerName: userRole === 'client' ? '' : 'N/A',
+      clientName: userRole === 'lawyer' ? '' : 'N/A',
+    });
+    
+    setIsDialogOpen(false);
+    
+    toast({
+      title: "Appointment scheduled",
+      description: `${newAppointmentObj.title} has been scheduled for ${formatDateTime(newAppointmentObj.date)}.`,
+    });
+  };
+
+  const handleDeleteAppointment = (appointmentId: string) => {
+    setAppointments(prev => prev.filter(apt => apt.id !== appointmentId));
+    toast({
+      title: "Appointment cancelled",
+      description: "The appointment has been cancelled.",
+    });
+  };
+
+  const handleUpdateAppointmentStatus = (appointmentId: string, newStatus: 'scheduled' | 'confirmed' | 'cancelled') => {
+    setAppointments(prev => prev.map(apt => 
+      apt.id === appointmentId 
+        ? {...apt, status: newStatus}
+        : apt
+    ));
+    
+    toast({
+      title: `Appointment ${newStatus}`,
+      description: `The appointment status has been updated to ${newStatus}.`,
     });
   };
 
@@ -258,16 +347,13 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
               <Plus className="mr-2 h-4 w-4" /> New Case
             </Link>
           </Button>
-          {userRole === 'client' && (
-            <Button variant="outline" onClick={handleUploadDocument}>
-              <Upload className="mr-2 h-4 w-4" /> Upload Document
-            </Button>
-          )}
+          <Button variant="outline" onClick={handleUploadDocument}>
+            <Upload className="mr-2 h-4 w-4" /> Upload Document
+          </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Document Management Card */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-medium flex items-center">
@@ -290,7 +376,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
           </CardContent>
         </Card>
 
-        {/* Appointments Card */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-medium flex items-center">
@@ -300,18 +385,112 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
             <CardDescription>{appointments.length} scheduled</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              variant="outline" 
-              onClick={() => handleManageAppointment('new')}
-              className="w-full"
-            >
-              Manage Appointments
-            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Schedule New Appointment
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Schedule Appointment</DialogTitle>
+                  <DialogDescription>
+                    Create a new appointment. Click save when you're done.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      placeholder="Appointment title"
+                      value={newAppointment.title}
+                      onChange={(e) => setNewAppointment({...newAppointment, title: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <CalendarComponent
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={setSelectedDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="time">Time</Label>
+                    <Input
+                      id="time"
+                      type="time"
+                      value={newAppointment.time}
+                      onChange={(e) => setNewAppointment({...newAppointment, time: e.target.value})}
+                    />
+                  </div>
+                  {userRole === 'client' && (
+                    <div className="grid gap-2">
+                      <Label htmlFor="lawyer">Lawyer</Label>
+                      <Select
+                        onValueChange={(value) => 
+                          setNewAppointment({...newAppointment, lawyerName: value})
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a lawyer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Sarah Mitchell">Sarah Mitchell</SelectItem>
+                          <SelectItem value="Michael Johnson">Michael Johnson</SelectItem>
+                          <SelectItem value="Jessica Brown">Jessica Brown</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {userRole === 'lawyer' && (
+                    <div className="grid gap-2">
+                      <Label htmlFor="client">Client</Label>
+                      <Select
+                        onValueChange={(value) => 
+                          setNewAppointment({...newAppointment, clientName: value})
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a client" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="John Doe">John Doe</SelectItem>
+                          <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                          <SelectItem value="Robert Johnson">Robert Johnson</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleCreateAppointment}>Save</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
-
         </Card>
 
-        {/* Active Cases */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-medium flex items-center">
@@ -350,34 +529,51 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="flex justify-between items-center p-4 bg-card rounded-md border border-border">
-                    <div>
-                      <p className="font-medium">{doc.name}</p>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                        <span>{doc.size}</span>
-                        <span>•</span>
-                        <span>Uploaded {formatDate(doc.uploadedAt)}</span>
+                {documents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No documents uploaded yet</p>
+                    <Button onClick={handleUploadDocument} className="mt-4">
+                      Upload Your First Document
+                    </Button>
+                  </div>
+                ) : (
+                  documents.map((doc) => (
+                    <div key={doc.id} className="flex justify-between items-center p-4 bg-card rounded-md border border-border">
+                      <div>
+                        <p className="font-medium">{doc.name}</p>
+                        <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                          <span>{doc.size}</span>
+                          <span>•</span>
+                          <span>Uploaded {formatDate(doc.uploadedAt)}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDownloadDocument(doc.name)}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={() => window.open(`#/documents/${doc.id}`, '_blank')}
+                        >
+                          View
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => handleDeleteDocument(doc.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDownloadDocument(doc.name)}
-                      >
-                        Download
-                      </Button>
-                      <Button 
-                        variant="secondary" 
-                        size="sm"
-                        onClick={() => window.open(`#/documents/${doc.id}`, '_blank')}
-                      >
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -385,43 +581,178 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
 
         <TabsContent value="appointments">
           <Card>
-            <CardHeader>
-              <CardTitle>Scheduled Appointments</CardTitle>
-              <CardDescription>
-                {userRole === 'lawyer' 
-                  ? 'Upcoming consultations with clients'
-                  : 'Your upcoming consultations with legal professionals'}
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Scheduled Appointments</CardTitle>
+                <CardDescription>
+                  {userRole === 'lawyer' 
+                    ? 'Upcoming consultations with clients'
+                    : 'Your upcoming consultations with legal professionals'}
+                </CardDescription>
+              </div>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Appointment
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Schedule Appointment</DialogTitle>
+                    <DialogDescription>
+                      Create a new appointment. Click save when you're done.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="title">Title</Label>
+                      <Input
+                        id="title"
+                        placeholder="Appointment title"
+                        value={newAppointment.title}
+                        onChange={(e) => setNewAppointment({...newAppointment, title: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="date">Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <Calendar className="mr-2 h-4 w-4" />
+                            {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <CalendarComponent
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="time">Time</Label>
+                      <Input
+                        id="time"
+                        type="time"
+                        value={newAppointment.time}
+                        onChange={(e) => setNewAppointment({...newAppointment, time: e.target.value})}
+                      />
+                    </div>
+                    {userRole === 'client' && (
+                      <div className="grid gap-2">
+                        <Label htmlFor="lawyer">Lawyer</Label>
+                        <Select
+                          onValueChange={(value) => 
+                            setNewAppointment({...newAppointment, lawyerName: value})
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a lawyer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Sarah Mitchell">Sarah Mitchell</SelectItem>
+                            <SelectItem value="Michael Johnson">Michael Johnson</SelectItem>
+                            <SelectItem value="Jessica Brown">Jessica Brown</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    {userRole === 'lawyer' && (
+                      <div className="grid gap-2">
+                        <Label htmlFor="client">Client</Label>
+                        <Select
+                          onValueChange={(value) => 
+                            setNewAppointment({...newAppointment, clientName: value})
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a client" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="John Doe">John Doe</SelectItem>
+                            <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                            <SelectItem value="Robert Johnson">Robert Johnson</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleCreateAppointment}>Save</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent>
-              {mockAppointments.length === 0 ? (
+              {appointments.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">No appointments scheduled</p>
-                  <Button asChild className="mt-4">
-                    <Link to="/appointments/schedule">
-                      {userRole === 'lawyer' ? 'Set Availability' : 'Schedule Consultation'}
-                    </Link>
+                  <Button onClick={() => setIsDialogOpen(true)} className="mt-4">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Schedule Your First Appointment
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {mockAppointments.map((appointment) => (
-                    <div key={appointment.id} className="flex justify-between items-center p-4 bg-card rounded-md border border-border">
+                  {appointments.map((appointment) => (
+                    <div key={appointment.id} 
+                      className={`flex justify-between items-center p-4 bg-card rounded-md border ${
+                        appointment.status === 'cancelled' ? 'border-destructive/50 bg-destructive/10' :
+                        appointment.status === 'confirmed' ? 'border-green-600/50 bg-green-600/10' :
+                        'border-border'
+                      }`}
+                    >
                       <div>
-                        <p className="font-medium">{appointment.title}</p>
+                        <div className="flex items-center">
+                          <p className="font-medium">{appointment.title}</p>
+                          {appointment.status === 'cancelled' && (
+                            <span className="ml-2 px-2 py-0.5 text-xs rounded bg-destructive text-destructive-foreground">
+                              Cancelled
+                            </span>
+                          )}
+                          {appointment.status === 'confirmed' && (
+                            <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-600 text-white">
+                              Confirmed
+                            </span>
+                          )}
+                        </div>
                         {userRole === 'lawyer' ? (
-                          <p className="text-sm text-muted-foreground">with Client Name</p>
+                          <p className="text-sm text-muted-foreground">with {appointment.clientName || 'Client'}</p>
                         ) : (
                           <p className="text-sm text-muted-foreground">with {appointment.lawyerName}</p>
                         )}
                         <p className="text-sm mt-1">{formatDateTime(appointment.date)}</p>
                       </div>
-                      <div>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/appointments/${appointment.id}`}>
-                            View Details
-                          </Link>
-                        </Button>
+                      <div className="flex gap-2">
+                        {appointment.status !== 'cancelled' && (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleUpdateAppointmentStatus(appointment.id, 'confirmed')}
+                              disabled={appointment.status === 'confirmed'}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Confirm
+                            </Button>
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              onClick={() => handleDeleteAppointment(appointment.id)}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Cancel
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
