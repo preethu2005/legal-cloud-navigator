@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -151,9 +150,10 @@ const mockQueries = [
 ];
 
 const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
+  const [documents, setDocuments] = useState(mockDocuments);
+  const [appointments, setAppointments] = useState(mockAppointments);
   const [activeCases, setActiveCases] = useState<LegalCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [documents, setDocuments] = useState(mockDocuments);
 
   useEffect(() => {
     // Simulate loading data from Firebase
@@ -203,7 +203,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   };
 
   const handleUploadDocument = () => {
-    // This would typically open a file picker and upload to Firebase storage
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.doc,.docx,.txt';
@@ -213,27 +212,38 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
       if (target.files && target.files.length > 0) {
         const file = target.files[0];
         
-        // Mock upload
-        setTimeout(() => {
-          // Add new document to list
-          const newDoc = {
-            id: Date.now().toString(),
-            name: file.name,
-            size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-            uploadedAt: new Date(),
-            caseId: '1', // Would be set based on selection in a real app
-          };
-          
-          setDocuments(prev => [newDoc, ...prev]);
-          toast({
-            title: "Document uploaded",
-            description: `${file.name} has been uploaded successfully.`,
-          });
-        }, 1500);
+        const newDoc = {
+          id: Date.now().toString(),
+          name: file.name,
+          size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+          uploadedAt: new Date(),
+          caseId: '1',
+        };
+        
+        setDocuments(prev => [newDoc, ...prev]);
+        toast({
+          title: "Document uploaded successfully",
+          description: `${file.name} has been uploaded.`,
+        });
       }
     };
     
     input.click();
+  };
+
+  const handleDownloadDocument = (docName: string) => {
+    // In a real app, this would download from your storage
+    toast({
+      title: "Download started",
+      description: `Downloading ${docName}...`,
+    });
+  };
+
+  const handleManageAppointment = (appointmentId: string) => {
+    toast({
+      title: "Appointment management",
+      description: "This feature will be available soon.",
+    });
   };
 
   return (
@@ -257,6 +267,50 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Document Management Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-medium flex items-center">
+              <Upload className="mr-2 h-5 w-5 text-muted-foreground" />
+              {userRole === 'lawyer' ? 'Client Documents' : 'My Documents'}
+            </CardTitle>
+            <CardDescription>
+              {documents.length} documents available
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              onClick={handleUploadDocument} 
+              className="w-full"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Document
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Appointments Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-medium flex items-center">
+              <Calendar className="mr-2 h-5 w-5 text-muted-foreground" />
+              Appointments
+            </CardTitle>
+            <CardDescription>{appointments.length} scheduled</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              onClick={() => handleManageAppointment('new')}
+              className="w-full"
+            >
+              Manage Appointments
+            </Button>
+          </CardContent>
+
+        </Card>
+
         {/* Active Cases */}
         <Card>
           <CardHeader className="pb-3">
@@ -277,71 +331,106 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
             </Link>
           </CardContent>
         </Card>
-
-        {/* Upcoming Appointments */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-medium flex items-center">
-              <Calendar className="mr-2 h-5 w-5 text-muted-foreground" />
-              Upcoming Appointments
-            </CardTitle>
-            <CardDescription>{mockAppointments.length} scheduled</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link to="/appointments" className="text-primary hover:underline text-sm">
-              Manage appointments
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Recent Queries or Documents */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-medium flex items-center">
-              {userRole === 'lawyer' ? (
-                <>
-                  <FileText className="mr-2 h-5 w-5 text-muted-foreground" />
-                  Recent Documents
-                </>
-              ) : (
-                <>
-                  <MessageSquare className="mr-2 h-5 w-5 text-muted-foreground" />
-                  Legal Chat Bot
-                </>
-              )}
-            </CardTitle>
-            <CardDescription>
-              {userRole === 'lawyer' 
-                ? `${documents.length} documents uploaded`
-                : `${mockQueries.length} recent inquiries`
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {userRole === 'lawyer' ? (
-              <Button variant="ghost" onClick={handleUploadDocument} className="text-primary p-0 h-auto hover:bg-transparent hover:underline">
-                Review documents
-              </Button>
-            ) : (
-              <Link to="/legal-ai" className="text-primary hover:underline text-sm">
-                Ask a new question
-              </Link>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
-      <Tabs defaultValue="cases" className="w-full">
+      <Tabs defaultValue="documents" className="w-full">
         <TabsList>
-          <TabsTrigger value="cases">My Cases</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
-          {userRole === 'lawyer' ? (
-            <TabsTrigger value="documents">Client Documents</TabsTrigger>
-          ) : (
-            <TabsTrigger value="queries">Legal Queries</TabsTrigger>
-          )}
+          <TabsTrigger value="cases">Cases</TabsTrigger>
         </TabsList>
         
+        <TabsContent value="documents">
+          <Card>
+            <CardHeader>
+              <CardTitle>Document Management</CardTitle>
+              <CardDescription>
+                View and manage all documents
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {documents.map((doc) => (
+                  <div key={doc.id} className="flex justify-between items-center p-4 bg-card rounded-md border border-border">
+                    <div>
+                      <p className="font-medium">{doc.name}</p>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                        <span>{doc.size}</span>
+                        <span>•</span>
+                        <span>Uploaded {formatDate(doc.uploadedAt)}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDownloadDocument(doc.name)}
+                      >
+                        Download
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        size="sm"
+                        onClick={() => window.open(`#/documents/${doc.id}`, '_blank')}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="appointments">
+          <Card>
+            <CardHeader>
+              <CardTitle>Scheduled Appointments</CardTitle>
+              <CardDescription>
+                {userRole === 'lawyer' 
+                  ? 'Upcoming consultations with clients'
+                  : 'Your upcoming consultations with legal professionals'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {mockAppointments.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">No appointments scheduled</p>
+                  <Button asChild className="mt-4">
+                    <Link to="/appointments/schedule">
+                      {userRole === 'lawyer' ? 'Set Availability' : 'Schedule Consultation'}
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {mockAppointments.map((appointment) => (
+                    <div key={appointment.id} className="flex justify-between items-center p-4 bg-card rounded-md border border-border">
+                      <div>
+                        <p className="font-medium">{appointment.title}</p>
+                        {userRole === 'lawyer' ? (
+                          <p className="text-sm text-muted-foreground">with Client Name</p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">with {appointment.lawyerName}</p>
+                        )}
+                        <p className="text-sm mt-1">{formatDateTime(appointment.date)}</p>
+                      </div>
+                      <div>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/appointments/${appointment.id}`}>
+                            View Details
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="cases">
           <Card>
             <CardHeader>
@@ -395,144 +484,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="appointments">
-          <Card>
-            <CardHeader>
-              <CardTitle>Scheduled Appointments</CardTitle>
-              <CardDescription>
-                {userRole === 'lawyer' 
-                  ? 'Upcoming consultations with clients'
-                  : 'Your upcoming consultations with legal professionals'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {mockAppointments.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">No appointments scheduled</p>
-                  <Button asChild className="mt-4">
-                    <Link to="/appointments/schedule">
-                      {userRole === 'lawyer' ? 'Set Availability' : 'Schedule Consultation'}
-                    </Link>
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {mockAppointments.map((appointment) => (
-                    <div key={appointment.id} className="flex justify-between items-center p-4 bg-card rounded-md border border-border">
-                      <div>
-                        <p className="font-medium">{appointment.title}</p>
-                        {userRole === 'lawyer' ? (
-                          <p className="text-sm text-muted-foreground">with Client Name</p>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">with {appointment.lawyerName}</p>
-                        )}
-                        <p className="text-sm mt-1">{formatDateTime(appointment.date)}</p>
-                      </div>
-                      <div>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/appointments/${appointment.id}`}>
-                            View Details
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Conditional tab content based on user role */}
-        {userRole === 'lawyer' ? (
-          <TabsContent value="documents">
-            <Card>
-              <CardHeader>
-                <CardTitle>Client Documents</CardTitle>
-                <CardDescription>
-                  Documents uploaded by your clients for review
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {documents.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">No documents available</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {documents.map((doc) => (
-                      <div key={doc.id} className="flex justify-between items-center p-4 bg-card rounded-md border border-border">
-                        <div>
-                          <p className="font-medium">{doc.name}</p>
-                          <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                            <span>{doc.size}</span>
-                            <span>•</span>
-                            <span>Uploaded {formatDate(doc.uploadedAt)}</span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            Download
-                          </Button>
-                          <Button variant="secondary" size="sm">
-                            Review
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ) : (
-          <TabsContent value="queries">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Legal Queries</CardTitle>
-                <CardDescription>
-                  Questions you've asked our Legal Chat Bot
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {mockQueries.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">No legal queries found</p>
-                    <Button asChild className="mt-4">
-                      <Link to="/legal-ai">Ask a Question</Link>
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {mockQueries.map((query) => (
-                      <div key={query.id} className="p-4 bg-card rounded-md border border-border">
-                        <p className="font-medium">{query.question}</p>
-                        <div className="flex justify-between mt-2">
-                          <span className="text-xs text-muted-foreground">
-                            {formatDate(query.timestamp)}
-                          </span>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            query.status === 'answered' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {query.status}
-                          </span>
-                        </div>
-                        <Button variant="ghost" size="sm" className="mt-2 w-full" asChild>
-                          <Link to={`/legal-ai/${query.id}`}>
-                            View Answer
-                          </Link>
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
       </Tabs>
     </div>
   );
