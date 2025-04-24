@@ -1,15 +1,48 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Search } from 'lucide-react';
+import { MessageSquare, Send, Search, ArrowRight } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { toast } from '@/components/ui/sonner';
 
 const AskLegalAI: React.FC = () => {
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'bot', content: string }[]>([]);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto scroll to bottom when chat updates
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory]);
+
+  // Progress bar animation
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isLoading) {
+      setProgress(0);
+      interval = setInterval(() => {
+        setProgress((prevProgress) => {
+          const newProgress = prevProgress + 5;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 150);
+    } else {
+      setProgress(100);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +50,10 @@ const AskLegalAI: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
-
+    
+    // Add user query to chat history
+    setChatHistory(prev => [...prev, { role: 'user', content: query }]);
+    
     try {
       // This would use the Gemini API in a production environment
       // For now, we'll simulate a response after a delay
@@ -26,11 +62,22 @@ const AskLegalAI: React.FC = () => {
       // Simulate a response from Gemini API
       const simulatedResponse = getSimulatedResponse(query);
       setResponse(simulatedResponse);
+      
+      // Add bot response to chat history
+      setChatHistory(prev => [...prev, { role: 'bot', content: simulatedResponse }]);
+      
+      // Reset query input
+      setQuery('');
+      
+      // Show success toast
+      toast.success("Response generated successfully");
     } catch (err) {
       setError('Failed to get a response from our legal chatbot. Please try again.');
+      toast.error("Failed to generate response");
       console.error('Error getting legal advice:', err);
     } finally {
       setIsLoading(false);
+      setProgress(100);
     }
   };
 
@@ -87,6 +134,15 @@ Would you like me to help you find a legal professional who specializes in this 
 *Note: This information is provided as general guidance and not as legal advice.*`;
   };
 
+  const handleSuggestedQuestionClick = (question: string) => {
+    setQuery(question);
+    // Optional: automatically submit the form when clicking a suggested question
+    setTimeout(() => {
+      const form = document.querySelector('form') as HTMLFormElement;
+      if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }, 100);
+  };
+
   const suggestedQuestions = [
     "What are my rights as a tenant?",
     "How do I form an LLC?",
@@ -104,6 +160,37 @@ Would you like me to help you find a legal professional who specializes in this 
         </p>
       </div>
 
+      {/* Chat History Display */}
+      {chatHistory.length > 0 && (
+        <Card className="mb-8 overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-medium">Chat History</CardTitle>
+          </CardHeader>
+          <CardContent className="max-h-[400px] overflow-y-auto p-0">
+            <div className="flex flex-col">
+              {chatHistory.map((msg, idx) => (
+                <div 
+                  key={idx} 
+                  className={`p-4 ${msg.role === 'bot' 
+                    ? 'bg-muted/50' 
+                    : 'bg-background border-b'}`}
+                >
+                  <div className="flex items-start">
+                    <div className={`flex-shrink-0 mr-3 mt-0.5 ${msg.role === 'bot' ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {msg.role === 'bot' ? <MessageSquare size={16} /> : <ArrowRight size={16} />}
+                    </div>
+                    <div className={`flex-1 ${msg.role === 'bot' ? 'prose prose-sm max-w-none' : ''}`}>
+                      <p className="whitespace-pre-line">{msg.content}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="text-lg font-medium">Ask a Legal Question</CardTitle>
@@ -118,18 +205,29 @@ Would you like me to help you find a legal professional who specializes in this 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="min-h-[120px] resize-y"
+              disabled={isLoading}
             />
             {error && (
               <div className="mt-2 text-sm text-destructive">
                 {error}
               </div>
             )}
+            {isLoading && (
+              <div className="mt-4">
+                <Progress value={progress} className="h-1" />
+                <p className="text-xs text-muted-foreground mt-1">Generating legal response...</p>
+              </div>
+            )}
           </CardContent>
-          <CardFooter className="flex justify-end border-t bg-muted/50 px-6 py-4">
+          <CardFooter className="flex justify-between border-t bg-muted/50 px-6 py-4">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">AI-powered legal guidance</span>
+            </div>
             <Button type="submit" disabled={isLoading || !query.trim()}>
               {isLoading ? 'Processing...' : (
                 <>
-                  <Search className="mr-2 h-4 w-4" /> Get Legal Guidance
+                  <Send className="mr-2 h-4 w-4" /> Get Legal Guidance
                 </>
               )}
             </Button>
@@ -137,37 +235,7 @@ Would you like me to help you find a legal professional who specializes in this 
         </form>
       </Card>
 
-      {response && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Chat Bot Response</CardTitle>
-            <CardDescription>
-              Preliminary guidance based on your query
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="prose prose-sm max-w-none">
-              <div className="bg-muted/50 p-4 rounded-md whitespace-pre-line">
-                {response}
-              </div>
-              <div className="mt-4 text-sm text-muted-foreground">
-                <p className="font-medium">Disclaimer:</p>
-                <p>
-                  This AI-generated response is for informational purposes only and does not constitute
-                  legal advice. For legal advice specific to your situation, please consult with a licensed attorney.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="border-t px-6 py-4">
-            <Button variant="outline" className="w-full" onClick={() => setQuery('')}>
-              Ask Another Question
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-
-      {!response && (
+      {chatHistory.length === 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-medium">Suggested Questions</CardTitle>
@@ -182,7 +250,7 @@ Would you like me to help you find a legal professional who specializes in this 
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => setQuery(question)}
+                    onClick={() => handleSuggestedQuestionClick(question)}
                   >
                     <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
                     <span>{question}</span>
@@ -193,6 +261,14 @@ Would you like me to help you find a legal professional who specializes in this 
           </CardContent>
         </Card>
       )}
+      
+      <div className="mt-6 text-sm text-muted-foreground text-center">
+        <p className="font-medium">Disclaimer:</p>
+        <p>
+          This AI-generated response is for informational purposes only and does not constitute
+          legal advice. For legal advice specific to your situation, please consult with a licensed attorney.
+        </p>
+      </div>
     </div>
   );
 };
