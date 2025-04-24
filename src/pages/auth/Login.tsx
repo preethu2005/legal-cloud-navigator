@@ -35,8 +35,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       localStorage.setItem('userName', userName);
       localStorage.setItem('isAuthenticated', 'true');
       
-      // Set user role based on email for demo purposes
-      const role = email.includes('lawyer') ? 'lawyer' : 'client';
+      // More explicit role assignment
+      const role = email.toLowerCase().includes('lawyer') ? 'lawyer' : 'client';
       localStorage.setItem('userRole', role);
       
       toast({
@@ -44,7 +44,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         description: `Welcome back to LegalCloud Advisor, ${userName}!`,
       });
       
-      navigate('/dashboard');
+      // Redirect to dashboard based on role
+      navigate(role === 'lawyer' ? '/dashboard' : '/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to log in. Please check your credentials and try again.');
