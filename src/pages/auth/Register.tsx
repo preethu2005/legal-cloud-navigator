@@ -5,30 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { toast } from '@/hooks/use-toast';
-
-enum UserRole {
-  CLIENT = "client",
-  LAWYER = "lawyer",
-}
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<UserRole>(UserRole.CLIENT);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
-  // For lawyer role
-  const [barNumber, setBarNumber] = useState('');
-  const [specialization, setSpecialization] = useState('');
-  const [yearsOfExperience, setYearsOfExperience] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,20 +39,10 @@ const Register: React.FC = () => {
         displayName: fullName
       });
       
-      // Store role and other details
+      // Store user details
       localStorage.setItem('userName', fullName);
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userRole', role);
-      
-      // Store additional lawyer details if applicable
-      if (role === UserRole.LAWYER) {
-        // In a real app, this would be stored in a database like Firestore
-        localStorage.setItem('lawyerDetails', JSON.stringify({
-          barNumber,
-          specialization,
-          yearsOfExperience
-        }));
-      }
+      localStorage.setItem('userRole', 'client'); // All users are registered as clients
       
       toast({
         title: "Registration successful",
@@ -137,62 +115,6 @@ const Register: React.FC = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label>I am registering as:</Label>
-              <RadioGroup 
-                defaultValue={UserRole.CLIENT} 
-                value={role}
-                onValueChange={(value) => setRole(value as UserRole)}
-                className="mt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value={UserRole.CLIENT} id="client" />
-                  <Label htmlFor="client">A client seeking legal advice</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value={UserRole.LAWYER} id="lawyer" />
-                  <Label htmlFor="lawyer">A legal professional</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Additional fields for lawyers */}
-            {role === UserRole.LAWYER && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="barNumber">Bar License Number</Label>
-                  <Input
-                    id="barNumber"
-                    placeholder="e.g., 123456"
-                    value={barNumber}
-                    onChange={(e) => setBarNumber(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="specialization">Specialization</Label>
-                  <Input
-                    id="specialization"
-                    placeholder="e.g., Family Law, Corporate Law"
-                    value={specialization}
-                    onChange={(e) => setSpecialization(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="experience">Years of Experience</Label>
-                  <Input
-                    id="experience"
-                    type="number"
-                    placeholder="e.g., 5"
-                    value={yearsOfExperience}
-                    onChange={(e) => setYearsOfExperience(e.target.value)}
-                    required
-                    min="0"
-                  />
-                </div>
-              </>
-            )}
             
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Creating account...' : 'Create Account'}
