@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -45,21 +46,19 @@ const HomePage: React.FC = () => {
 
       {/* Features Section - only show when not logged in */}
       {!isAuthenticated && (
-        <section className="py-16 px-6">
-          <div className="max-w-3xl mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-serif font-semibold text-primary mb-6">
-              LegalCloud Advisor System
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-              A simple and efficient way to get legal assistance, manage cases, and connect with legal professionals.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button asChild size="lg" className="font-medium">
-                <Link to="/login">Login</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="font-medium">
-                <Link to="/register">Sign Up</Link>
-              </Button>
+        <section className="py-16 px-6 bg-muted/50">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-card p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-medium mb-2">Legal Document Management</h3>
+              <p className="text-muted-foreground">Securely store and manage all your legal documents in one place.</p>
+            </div>
+            <div className="bg-card p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-medium mb-2">AI-Powered Legal Assistance</h3>
+              <p className="text-muted-foreground">Get quick answers to common legal questions with our AI assistant.</p>
+            </div>
+            <div className="bg-card p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-medium mb-2">Connect with Professionals</h3>
+              <p className="text-muted-foreground">Schedule consultations with experienced legal professionals.</p>
             </div>
           </div>
         </section>

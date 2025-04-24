@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -24,13 +23,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setIsLoading(true);
     
     try {
+      // Extract name from email for display (temporary solution)
+      const userName = email.split('@')[0];
+      localStorage.setItem('userName', userName);
+      
       // Use the onLogin prop if available, otherwise just log
       if (onLogin) {
         const success = onLogin(email, password);
         if (success) {
           toast({
             title: "Login successful",
-            description: "Welcome back to LegalCloud Advisor!",
+            description: `Welcome back to LegalCloud Advisor, ${userName}!`,
           });
           navigate('/dashboard');
         }

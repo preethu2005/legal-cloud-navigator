@@ -133,7 +133,7 @@ const mockLawyerCases = [
   }
 ];
 
-const mockAppointments = [
+const mockAppointments: Appointment[] = [
   {
     id: '1',
     title: 'Initial Consultation',
@@ -190,7 +190,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   const [activeCases, setActiveCases] = useState<LegalCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+  const [userName, setUserName] = useState<string>("User");
+
   const [newAppointment, setNewAppointment] = useState({
     title: '',
     date: new Date(),
@@ -201,8 +202,15 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   
   const [editingAppointment, setEditingAppointment] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  
+
   useEffect(() => {
+    const storedName = localStorage.getItem('userName');
+    if (storedName) {
+      setUserName(storedName);
+    } else {
+      setUserName(userRole === 'lawyer' ? 'Counselor' : 'Client');
+    }
+    
     setTimeout(() => {
       if (userRole === 'lawyer') {
         setActiveCases(mockLawyerCases);
@@ -339,7 +347,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-serif font-semibold">
-          {userRole === 'lawyer' ? 'Lawyer Dashboard' : 'Client Dashboard'}
+          {userRole === 'lawyer' ? `Lawyer Dashboard | Welcome, ${userName}` : `Client Dashboard | Welcome, ${userName}`}
         </h1>
         <div className="flex space-x-4">
           <Button asChild>
