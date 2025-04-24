@@ -15,6 +15,7 @@ import AskLegalAI from "@/pages/legal/AskLegalAI";
 import Cases from "@/pages/cases/Cases";
 import NotFound from "@/pages/NotFound";
 import PrivateRoute from "@/components/auth/PrivateRoute";
+import ProjectSummary from "@/pages/ProjectSummary";
 
 const App = () => {
   // Firebase authentication state
@@ -82,6 +83,7 @@ const App = () => {
               <Route path="/register" element={
                 isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
               } />
+              <Route path="/project-summary" element={<ProjectSummary />} />
               
               {/* Protected Routes */}
               <Route element={<PrivateRoute isAuthenticated={isAuthenticated} />}>
