@@ -84,22 +84,10 @@ const App = () => {
               } />
               
               {/* Protected Routes */}
-              <Route element={<PrivateRoute isAuthenticated={isAuthenticated} userRole={userRole} />}>
+              <Route element={<PrivateRoute isAuthenticated={isAuthenticated} />}>
                 <Route path="/dashboard" element={<Dashboard userRole={userRole || 'client'} />} />
                 <Route path="/legal-ai" element={<AskLegalAI />} />
                 <Route path="/cases" element={<Cases />} />
-              </Route>
-              
-              {/* Role-specific routes */}
-              <Route element={
-                <PrivateRoute 
-                  isAuthenticated={isAuthenticated} 
-                  requiredRole="lawyer" 
-                  userRole={userRole}
-                  redirectPath="/dashboard"
-                />
-              }>
-                {/* Add lawyer-specific routes here if needed */}
               </Route>
               
               <Route path="*" element={<NotFound />} />
