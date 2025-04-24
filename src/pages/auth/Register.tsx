@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { toast } from '@/hooks/use-toast';
 
 enum UserRole {
   CLIENT = "client",
@@ -39,18 +42,40 @@ const Register: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // This would typically use Firebase auth
-      console.log('Register with:', email, password, fullName, role);
+      // Register with Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Update profile with full name
+      await updateProfile(user, {
+        displayName: fullName
+      });
+      
+      // Store role and other details
+      localStorage.setItem('userName', fullName);
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userRole', role);
+      
+      // Store additional lawyer details if applicable
       if (role === UserRole.LAWYER) {
-        console.log('Lawyer details:', barNumber, specialization, yearsOfExperience);
+        // In a real app, this would be stored in a database like Firestore
+        localStorage.setItem('lawyerDetails', JSON.stringify({
+          barNumber,
+          specialization,
+          yearsOfExperience
+        }));
       }
       
-      // Simulate successful registration
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
-    } catch (err) {
-      setError('Failed to create an account. Please try again.');
+      toast({
+        title: "Registration successful",
+        description: "Welcome to LegalCloud Advisor!",
+      });
+      
+      navigate('/dashboard');
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError(err.message || 'Failed to create an account. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };

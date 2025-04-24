@@ -1,16 +1,17 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { auth } from '@/lib/firebase';
 
 const HomePage: React.FC = () => {
-  // Check if user is logged in
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  // Check if user is logged in using Firebase auth
+  const isAuthenticated = auth.currentUser !== null || localStorage.getItem('isAuthenticated') === 'true';
   const userRole = localStorage.getItem('userRole');
   const navigate = useNavigate();
 
   // Redirect to dashboard if already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
     }

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 interface LoginProps {
   onLogin?: (email: string, password: string) => boolean;
@@ -23,31 +26,28 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setIsLoading(true);
     
     try {
+      // Sign in with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
       // Extract name from email for display (temporary solution)
       const userName = email.split('@')[0];
       localStorage.setItem('userName', userName);
+      localStorage.setItem('isAuthenticated', 'true');
       
-      // Use the onLogin prop if available, otherwise just log
-      if (onLogin) {
-        const success = onLogin(email, password);
-        if (success) {
-          toast({
-            title: "Login successful",
-            description: `Welcome back to LegalCloud Advisor, ${userName}!`,
-          });
-          navigate('/dashboard');
-        }
-      } else {
-        // This would typically use Firebase auth
-        console.log('Login with:', email, password);
-        
-        // Simulate successful login
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1500);
-      }
-    } catch (err) {
-      setError('Failed to log in. Please check your credentials and try again.');
+      // Set user role based on email for demo purposes
+      const role = email.includes('lawyer') ? 'lawyer' : 'client';
+      localStorage.setItem('userRole', role);
+      
+      toast({
+        title: "Login successful",
+        description: `Welcome back to LegalCloud Advisor, ${userName}!`,
+      });
+      
+      navigate('/dashboard');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'Failed to log in. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }

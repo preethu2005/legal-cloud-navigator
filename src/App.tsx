@@ -4,6 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState, useEffect } from "react";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import Navbar from "@/components/layout/Navbar";
 import HomePage from "@/pages/HomePage";
 import Login from "@/pages/auth/Login";
@@ -15,48 +17,54 @@ import NotFound from "@/pages/NotFound";
 import PrivateRoute from "@/components/auth/PrivateRoute";
 
 const App = () => {
-  // Mock authentication state
+  // Firebase authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate checking authentication
+  // Monitor authentication state
   useEffect(() => {
-    // This would check Firebase auth in a real app
-    const checkAuth = () => {
-      // For demo purposes, just simulate a check
-      const savedAuthState = localStorage.getItem('isAuthenticated');
-      if (savedAuthState === 'true') {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
         setIsAuthenticated(true);
-        setUserRole(localStorage.getItem('userRole'));
+        
+        // Get role from localStorage (in a real app, this would be in Firestore or custom claims)
+        const role = localStorage.getItem('userRole') || 'client';
+        setUserRole(role);
+        
+        // Store authentication state in localStorage for persistence
+        localStorage.setItem('isAuthenticated', 'true');
+      } else {
+        // User is signed out
+        setIsAuthenticated(false);
+        setUserRole(null);
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userRole');
       }
-    };
+      setIsLoading(false);
+    });
 
-    checkAuth();
+    // Cleanup subscription
+    return () => unsubscribe();
   }, []);
 
-  // Mock login function
-  const handleLogin = (email: string, password: string) => {
-    // This would be Firebase auth
-    setIsAuthenticated(true);
-    
-    // Set mock role based on email for demo
-    const role = email.includes('lawyer') ? 'lawyer' : 'client';
-    setUserRole(role);
-    
-    // Store in localStorage for demo persistence
-    localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('userRole', role);
-    
-    return true;
+  // Logout function
+  const handleLogout = () => {
+    auth.signOut().then(() => {
+      setIsAuthenticated(false);
+      setUserRole(null);
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userRole');
+    }).catch((error) => {
+      console.error("Error signing out: ", error);
+    });
   };
 
-  // Mock logout function
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUserRole(null);
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userRole');
-  };
+  if (isLoading) {
+    // You could add a loading spinner here
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
 
   return (
     <TooltipProvider>
@@ -69,9 +77,11 @@ const App = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={
-                <Login onLogin={handleLogin} />
+                isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
               } />
-              <Route path="/register" element={<Register />} />
+              <Route path="/register" element={
+                isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
+              } />
               
               {/* Protected Routes */}
               <Route element={<PrivateRoute isAuthenticated={isAuthenticated} />}>
