@@ -1,13 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Calendar, FileText, MessageSquare, Clock, Plus, Upload, 
-  Trash2, Edit, X, Check, Download
-} from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { 
   Dialog,
@@ -347,20 +341,22 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex flex-col mb-8">
-        <h1 className="text-3xl font-serif font-semibold mb-2">
+        <h1 className="text-3xl font-serif font-semibold mb-3">
           {userRole === 'lawyer' ? 'Lawyer Dashboard' : 'Client Dashboard'}
         </h1>
-        <h2 className="text-xl text-muted-foreground">
+        <h2 className="text-xl text-muted-foreground mb-6">
           Welcome, {userName}
         </h2>
-        <div className="flex space-x-4 mt-4">
+        <div className="flex flex-wrap gap-4">
           <Button asChild>
             <Link to="/cases/new" className="flex items-center">
               <Plus className="mr-2 h-4 w-4" /> New Case
             </Link>
           </Button>
-          <Button variant="outline" onClick={handleUploadDocument}>
-            <Upload className="mr-2 h-4 w-4" /> Upload Document
+          <Button variant="outline" asChild>
+            <Link to="/appointments" className="flex items-center">
+              <Calendar className="mr-2 h-4 w-4" /> Manage Appointments
+            </Link>
           </Button>
         </div>
       </div>
