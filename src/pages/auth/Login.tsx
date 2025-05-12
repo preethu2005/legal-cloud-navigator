@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface LoginProps {
   onLogin?: (email: string, password: string) => boolean;
@@ -51,6 +52,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper functions for demo credentials
+  const setLawyerCredentials = () => {
+    setEmail('lawyer@example.com');
+    setPassword('lawyer123');
+  };
+
+  const setClientCredentials = () => {
+    setEmail('client@example.com');
+    setPassword('client123');
   };
 
   return (
@@ -98,6 +110,48 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
+            
+            {/* Demo credentials section */}
+            <div className="mt-6 space-y-3">
+              <Alert className="bg-muted">
+                <AlertDescription className="text-sm">
+                  <div className="font-medium mb-2">Demo Credentials:</div>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span>Lawyer Account:</span>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={setLawyerCredentials}
+                        className="h-7 text-xs"
+                      >
+                        Use Lawyer Login
+                      </Button>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Email: lawyer@example.com<br/>
+                      Password: lawyer123
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-2">
+                      <span>Client Account:</span>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={setClientCredentials}
+                        className="h-7 text-xs"
+                      >
+                        Use Client Login
+                      </Button>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Email: client@example.com<br/>
+                      Password: client123
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </div>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center">

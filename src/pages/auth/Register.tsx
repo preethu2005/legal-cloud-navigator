@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -119,6 +120,22 @@ const Register: React.FC = () => {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Creating account...' : 'Create Account'}
             </Button>
+
+            {/* Demo credentials section */}
+            <div className="mt-6">
+              <Alert className="bg-muted">
+                <AlertDescription className="text-sm">
+                  <div className="font-medium mb-2">Note:</div>
+                  <p>
+                    For testing, pre-configured accounts are available on the login page:
+                  </p>
+                  <ul className="list-disc pl-5 mt-1 text-xs text-muted-foreground">
+                    <li>lawyer@example.com / lawyer123 (Lawyer account)</li>
+                    <li>client@example.com / client123 (Client account)</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            </div>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center">
