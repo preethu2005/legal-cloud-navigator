@@ -98,7 +98,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </Button>
             
             <div className="mt-4 text-sm text-muted-foreground text-center">
-              <p>For demo: use lawyer@gmail.com / lawyer123 for lawyer access</p>
+              
             </div>
           </form>
         </CardContent>
