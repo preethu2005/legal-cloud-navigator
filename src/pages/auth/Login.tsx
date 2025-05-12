@@ -31,7 +31,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const user = userCredential.user;
       
       // Set user role based on email for demo purposes
-      const role = email.includes('lawyer') ? 'lawyer' : 'client';
+      const role = email.toLowerCase() === 'lawyer@gmail.com' ? 'lawyer' : 'client';
       localStorage.setItem('userRole', role);
       localStorage.setItem('userName', user.displayName || email.split('@')[0]);
       localStorage.setItem('isAuthenticated', 'true');
@@ -49,17 +49,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Helper functions for demo credentials
-  const setLawyerCredentials = () => {
-    setEmail('lawyer@example.com');
-    setPassword('lawyer123');
-  };
-
-  const setClientCredentials = () => {
-    setEmail('client@example.com');
-    setPassword('client123');
   };
 
   return (
@@ -108,23 +97,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
             
-            <div className="mt-6 flex justify-between">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={setLawyerCredentials}
-                className="flex-1 mr-2"
-              >
-                Lawyer Login
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={setClientCredentials}
-                className="flex-1 ml-2"
-              >
-                Client Login
-              </Button>
+            <div className="mt-4 text-sm text-muted-foreground text-center">
+              <p>For demo: use lawyer@gmail.com / lawyer123 for lawyer access</p>
             </div>
           </form>
         </CardContent>
