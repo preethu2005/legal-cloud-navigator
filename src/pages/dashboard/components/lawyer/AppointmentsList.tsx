@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 interface Appointment {
@@ -17,11 +18,39 @@ interface Appointment {
 
 interface AppointmentsListProps {
   appointments: Appointment[];
+  setAppointments?: React.Dispatch<React.SetStateAction<Appointment[]>>;
 }
 
-const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments }) => {
+const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments, setAppointments }) => {
   const formatDateTime = (date: Date) => {
     return format(date, 'PPP p');
+  };
+
+  const handleReschedule = (appointmentId: string) => {
+    toast({
+      title: "Reschedule Appointment",
+      description: "This feature will be available in the next update.",
+    });
+  };
+
+  const handleCancel = (appointmentId: string) => {
+    if (setAppointments) {
+      setAppointments(appointments.map(appointment => 
+        appointment.id === appointmentId 
+          ? { ...appointment, status: 'cancelled' } 
+          : appointment
+      ));
+
+      toast({
+        title: "Appointment Cancelled",
+        description: "The appointment has been cancelled successfully.",
+      });
+    } else {
+      toast({
+        title: "Cancel Appointment",
+        description: "This feature will be available in the next update.",
+      });
+    }
   };
 
   return (
@@ -65,8 +94,28 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ appointments }) => 
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline">Reschedule</Button>
-                      <Button size="sm" variant="ghost" className="text-red-600">Cancel</Button>
+                      {appointment.status !== 'cancelled' && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleReschedule(appointment.id)}
+                          >
+                            Reschedule
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="text-red-600" 
+                            onClick={() => handleCancel(appointment.id)}
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      )}
+                      {appointment.status === 'cancelled' && (
+                        <span className="text-sm text-muted-foreground">No actions available</span>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

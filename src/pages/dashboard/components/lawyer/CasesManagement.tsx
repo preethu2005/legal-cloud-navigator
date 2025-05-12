@@ -1,45 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Edit, MessageSquare } from 'lucide-react';
+import { Search, Edit } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-
-enum CaseStatus {
-  NEW = "new",
-  IN_PROGRESS = "in_progress",
-  PENDING = "pending",
-  RESOLVED = "resolved",
-  CLOSED = "closed",
-}
-
-interface LegalCase {
-  id: string;
-  clientId: string;
-  clientName: string;
-  title: string;
-  description: string;
-  category: string;
-  status: CaseStatus;
-  priority: string;
-  dueDate?: Date;
-  documents: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { CaseStatus, LegalCase } from './types';
 
 interface CasesManagementProps {
   cases: LegalCase[];
   getStatusColor: (status: string) => string;
+  onStatusChange?: (caseId: string, newStatus: CaseStatus) => void;
 }
 
-const CasesManagement: React.FC<CasesManagementProps> = ({ cases, getStatusColor }) => {
+const CasesManagement: React.FC<CasesManagementProps> = ({ cases, getStatusColor, onStatusChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [filteredCases, setFilteredCases] = useState<LegalCase[]>(cases);
@@ -69,11 +47,20 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, getStatusColor
   }, [searchQuery, statusFilter, cases]);
 
   const handleStatusChange = (caseId: string, newStatus: CaseStatus) => {
-    // This would be updated to use a context or state management in a full implementation
-    // For now, we'll just show a toast
+    if (onStatusChange) {
+      onStatusChange(caseId, newStatus);
+    }
+    
     toast({
       title: "Case status updated",
       description: `Case status has been changed to ${newStatus.replace('_', ' ')}.`,
+    });
+  };
+  
+  const handleViewCase = (caseId: string) => {
+    toast({
+      title: "View Case Details",
+      description: `Case details view is coming soon.`,
     });
   };
 
@@ -130,9 +117,9 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, getStatusColor
               {filteredCases.map((caseItem) => (
                 <TableRow key={caseItem.id}>
                   <TableCell className="font-medium">
-                    <Link to={`/cases/${caseItem.id}`} className="hover:text-primary">
+                    <div className="hover:text-primary cursor-pointer" onClick={() => handleViewCase(caseItem.id)}>
                       {caseItem.title}
-                    </Link>
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                       {caseItem.description}
                     </p>
@@ -161,13 +148,8 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, getStatusColor
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline" asChild>
-                        <Link to={`/cases/${caseItem.id}`}>
-                          <Edit className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-blue-600">
-                        <MessageSquare className="h-4 w-4" />
+                      <Button size="sm" variant="outline" onClick={() => handleViewCase(caseItem.id)}>
+                        <Edit className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>

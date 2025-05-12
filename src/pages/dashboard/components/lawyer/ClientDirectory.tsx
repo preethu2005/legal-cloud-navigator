@@ -2,8 +2,6 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Users, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Client {
@@ -28,7 +26,6 @@ const ClientDirectory: React.FC<ClientDirectoryProps> = ({ clients }) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Users className="mr-2 h-5 w-5 text-muted-foreground" />
           Client Directory
         </CardTitle>
         <CardDescription>Manage your client relationships</CardDescription>
@@ -41,7 +38,6 @@ const ClientDirectory: React.FC<ClientDirectoryProps> = ({ clients }) => {
               <TableHead>Contact</TableHead>
               <TableHead>Client Since</TableHead>
               <TableHead>Active Cases</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -54,14 +50,6 @@ const ClientDirectory: React.FC<ClientDirectoryProps> = ({ clients }) => {
                 </TableCell>
                 <TableCell>{formatDate(client.joinedAt)}</TableCell>
                 <TableCell>{client.casesCount}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button size="sm" variant="outline">View Profile</Button>
-                    <Button size="sm" variant="outline">
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>

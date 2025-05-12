@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Plus } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 // Import refactored components
 import StatisticsCards from './components/lawyer/StatisticsCards';
@@ -51,6 +52,20 @@ const LawyerDashboard: React.FC = () => {
       c.id === caseId ? {...c, status: newStatus, updatedAt: new Date()} : c
     ));
   };
+  
+  const handleCalendarView = () => {
+    toast({
+      title: "Calendar Feature Coming Soon",
+      description: "The calendar functionality is currently under development.",
+    });
+  };
+  
+  const handleNewCase = () => {
+    toast({
+      title: "New Case Feature Coming Soon",
+      description: "The new case creation functionality is currently under development.",
+    });
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -60,15 +75,11 @@ const LawyerDashboard: React.FC = () => {
             Lawyer Dashboard
           </h1>
           <div className="flex gap-3">
-            <Button variant="outline" asChild>
-              <Link to="/calendar" className="flex items-center">
-                <Calendar className="mr-2 h-4 w-4" /> View Calendar
-              </Link>
+            <Button variant="outline" onClick={handleCalendarView}>
+              <Calendar className="mr-2 h-4 w-4" /> View Calendar
             </Button>
-            <Button asChild>
-              <Link to="/cases/new" className="flex items-center">
-                <Plus className="mr-2 h-4 w-4" /> New Case
-              </Link>
+            <Button onClick={handleNewCase}>
+              <Plus className="mr-2 h-4 w-4" /> New Case
             </Button>
           </div>
         </div>
@@ -102,13 +113,17 @@ const LawyerDashboard: React.FC = () => {
         <TabsContent value="cases">
           <CasesManagement 
             cases={cases} 
-            getStatusColor={getStatusColor} 
+            getStatusColor={getStatusColor}
+            onStatusChange={handleStatusChange}
           />
         </TabsContent>
         
         {/* Appointments Tab */}
         <TabsContent value="appointments">
-          <AppointmentsList appointments={appointments} />
+          <AppointmentsList 
+            appointments={appointments}
+            setAppointments={setAppointments} 
+          />
         </TabsContent>
         
         {/* Clients Tab */}
