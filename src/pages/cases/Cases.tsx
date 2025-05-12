@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -309,13 +308,6 @@ const CasesList: React.FC<CasesListProps> = ({ cases, isLoading, formatDate, get
                   {caseItem.status.replace('_', ' ')}
                 </span>
               </div>
-            </div>
-            <div className="mt-3 sm:mt-0">
-              <Button variant="outline" size="sm" asChild>
-                <Link to={`/cases/${caseItem.id}`}>
-                  View Details
-                </Link>
-              </Button>
             </div>
           </div>
           <p className="mt-4 text-muted-foreground">{caseItem.description}</p>
