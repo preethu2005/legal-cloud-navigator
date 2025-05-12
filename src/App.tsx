@@ -11,6 +11,7 @@ import HomePage from "@/pages/HomePage";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import Dashboard from "@/pages/dashboard/Dashboard";
+import LawyerDashboard from "@/pages/dashboard/LawyerDashboard";
 import AskLegalAI from "@/pages/legal/AskLegalAI";
 import Cases from "@/pages/cases/Cases";
 import NotFound from "@/pages/NotFound";
@@ -87,7 +88,12 @@ const App = () => {
               
               {/* Protected Routes */}
               <Route element={<PrivateRoute isAuthenticated={isAuthenticated} />}>
-                <Route path="/dashboard" element={<Dashboard userRole={userRole || 'client'} />} />
+                {/* Conditional dashboard based on role */}
+                <Route path="/dashboard" element={
+                  userRole === 'lawyer' 
+                    ? <LawyerDashboard /> 
+                    : <Dashboard userRole={userRole || 'client'} />
+                } />
                 <Route path="/legal-ai" element={<AskLegalAI />} />
                 <Route path="/cases" element={<Cases />} />
               </Route>
