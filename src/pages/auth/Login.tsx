@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 interface LoginProps {
   onLogin?: (email: string, password: string) => boolean;
@@ -26,11 +26,24 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setIsLoading(true);
     
     try {
-      // Sign in with Firebase
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      let userCredential;
+      
+      try {
+        // Try to sign in with existing account
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      } catch (signInError: any) {
+        // If login fails with 'lawyer@gmail.com', create the account first
+        if (email === 'lawyer@gmail.com' && password === 'lawyer123') {
+          console.log('Creating lawyer account');
+          userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        } else {
+          throw signInError;
+        }
+      }
+      
       const user = userCredential.user;
       
-      // Set user role based on email for demo purposes
+      // Set user role based on email
       const role = email.toLowerCase() === 'lawyer@gmail.com' ? 'lawyer' : 'client';
       localStorage.setItem('userRole', role);
       localStorage.setItem('userName', user.displayName || email.split('@')[0]);
@@ -97,8 +110,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
             
-            <div className="mt-4 text-sm text-muted-foreground text-center">
-              
+            <div className="mt-2 text-sm text-center">
+              <p className="text-muted-foreground">Use lawyer@gmail.com / lawyer123 for lawyer account</p>
             </div>
           </form>
         </CardContent>

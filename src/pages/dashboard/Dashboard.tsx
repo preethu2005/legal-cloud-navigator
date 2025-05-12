@@ -343,6 +343,19 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
     });
   };
 
+  const handleManageAppointments = () => {
+    // Open the appointments tab
+    const appointmentsTab = document.querySelector('[data-state="inactive"][value="appointments"]') as HTMLButtonElement;
+    if (appointmentsTab) {
+      appointmentsTab.click();
+    } else {
+      toast({
+        title: "Appointments",
+        description: "Opening appointments manager",
+      });
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex flex-col mb-8">
@@ -358,10 +371,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
               <Plus className="mr-2 h-4 w-4" /> New Case
             </Link>
           </Button>
-          <Button variant="outline" asChild>
-            <Link to="/appointments" className="flex items-center">
-              <Calendar className="mr-2 h-4 w-4" /> Manage Appointments
-            </Link>
+          <Button variant="outline" onClick={handleManageAppointments} className="flex items-center">
+            <Calendar className="mr-2 h-4 w-4" /> Manage Appointments
           </Button>
         </div>
       </div>
