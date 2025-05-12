@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface LoginProps {
   onLogin?: (email: string, password: string) => boolean;
@@ -31,24 +30,22 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      // Extract name from email for display (temporary solution)
-      const userName = email.split('@')[0];
-      localStorage.setItem('userName', userName);
-      localStorage.setItem('isAuthenticated', 'true');
-      
       // Set user role based on email for demo purposes
       const role = email.includes('lawyer') ? 'lawyer' : 'client';
       localStorage.setItem('userRole', role);
+      localStorage.setItem('userName', user.displayName || email.split('@')[0]);
+      localStorage.setItem('isAuthenticated', 'true');
       
       toast({
         title: "Login successful",
-        description: `Welcome back to LegalCloud Advisor, ${userName}!`,
+        description: `Welcome back to LegalCloud Advisor!`,
       });
       
+      // Navigate to the appropriate dashboard based on role
       navigate('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'Failed to log in. Please check your credentials and try again.');
+      setError('Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }

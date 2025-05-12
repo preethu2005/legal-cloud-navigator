@@ -58,6 +58,7 @@ const App = () => {
       setUserRole(null);
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('userRole');
+      localStorage.removeItem('userName');
     }).catch((error) => {
       console.error("Error signing out: ", error);
     });
@@ -67,6 +68,17 @@ const App = () => {
     // You could add a loading spinner here
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
+
+  // Function to determine which dashboard to show
+  const DashboardComponent = () => {
+    const role = localStorage.getItem('userRole');
+    console.log("Current user role:", role);
+    
+    if (role === 'lawyer') {
+      return <LawyerDashboard />;
+    }
+    return <Dashboard userRole={role || 'client'} />;
+  };
 
   return (
     <TooltipProvider>
@@ -88,12 +100,7 @@ const App = () => {
               
               {/* Protected Routes */}
               <Route element={<PrivateRoute isAuthenticated={isAuthenticated} />}>
-                {/* Conditional dashboard based on role */}
-                <Route path="/dashboard" element={
-                  userRole === 'lawyer' 
-                    ? <LawyerDashboard /> 
-                    : <Dashboard userRole={userRole || 'client'} />
-                } />
+                <Route path="/dashboard" element={<DashboardComponent />} />
                 <Route path="/legal-ai" element={<AskLegalAI />} />
                 <Route path="/cases" element={<Cases />} />
               </Route>
