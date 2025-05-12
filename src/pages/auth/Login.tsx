@@ -111,46 +111,23 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
             
-            {/* Demo credentials section */}
-            <div className="mt-6 space-y-3">
-              <Alert className="bg-muted">
-                <AlertDescription className="text-sm">
-                  <div className="font-medium mb-2">Demo Credentials:</div>
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span>Lawyer Account:</span>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={setLawyerCredentials}
-                        className="h-7 text-xs"
-                      >
-                        Use Lawyer Login
-                      </Button>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Email: lawyer@example.com<br/>
-                      Password: lawyer123
-                    </div>
-                    
-                    <div className="flex justify-between items-center mt-2">
-                      <span>Client Account:</span>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={setClientCredentials}
-                        className="h-7 text-xs"
-                      >
-                        Use Client Login
-                      </Button>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Email: client@example.com<br/>
-                      Password: client123
-                    </div>
-                  </div>
-                </AlertDescription>
-              </Alert>
+            <div className="mt-6 flex justify-between">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={setLawyerCredentials}
+                className="flex-1 mr-2"
+              >
+                Lawyer Login
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={setClientCredentials}
+                className="flex-1 ml-2"
+              >
+                Client Login
+              </Button>
             </div>
           </form>
         </CardContent>
