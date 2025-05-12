@@ -4,9 +4,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Edit } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { CaseStatus, LegalCase } from './types';
@@ -56,13 +55,6 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, getStatusColor
       description: `Case status has been changed to ${newStatus.replace('_', ' ')}.`,
     });
   };
-  
-  const handleViewCase = (caseId: string) => {
-    toast({
-      title: "View Case Details",
-      description: `Case details view is coming soon.`,
-    });
-  };
 
   return (
     <Card>
@@ -110,14 +102,13 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, getStatusColor
                 <TableHead>Category</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredCases.map((caseItem) => (
                 <TableRow key={caseItem.id}>
                   <TableCell className="font-medium">
-                    <div className="hover:text-primary cursor-pointer" onClick={() => handleViewCase(caseItem.id)}>
+                    <div>
                       {caseItem.title}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
@@ -145,13 +136,6 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, getStatusColor
                         <SelectItem value={CaseStatus.CLOSED}>Closed</SelectItem>
                       </SelectContent>
                     </Select>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleViewCase(caseItem.id)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </TableCell>
                 </TableRow>
               ))}

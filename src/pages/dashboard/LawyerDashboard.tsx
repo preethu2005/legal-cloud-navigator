@@ -1,10 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import { Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 // Import refactored components
 import StatisticsCards from './components/lawyer/StatisticsCards';
@@ -21,6 +24,8 @@ const LawyerDashboard: React.FC = () => {
   const [clients, setClients] = useState(mockClients);
   const [cases, setCases] = useState<LegalCase[]>(mockLawyerCases);
   const [appointments, setAppointments] = useState(mockAppointments);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   // Calculate statistics
   const activeCasesCount = cases.filter(c => c.status !== CaseStatus.CLOSED && c.status !== CaseStatus.RESOLVED).length;
@@ -54,10 +59,7 @@ const LawyerDashboard: React.FC = () => {
   };
   
   const handleCalendarView = () => {
-    toast({
-      title: "Calendar Feature Coming Soon",
-      description: "The calendar functionality is currently under development.",
-    });
+    setIsCalendarOpen(true);
   };
   
   const handleNewCase = () => {
@@ -65,6 +67,19 @@ const LawyerDashboard: React.FC = () => {
       title: "New Case Feature Coming Soon",
       description: "The new case creation functionality is currently under development.",
     });
+  };
+
+  const getAppointmentsForDate = (date: Date) => {
+    return appointments.filter(appointment => {
+      const appointmentDate = new Date(appointment.date);
+      return appointmentDate.getDate() === date.getDate() && 
+             appointmentDate.getMonth() === date.getMonth() && 
+             appointmentDate.getFullYear() === date.getFullYear();
+    });
+  };
+
+  const dateHasAppointment = (date: Date) => {
+    return getAppointmentsForDate(date).length > 0;
   };
 
   return (
@@ -76,7 +91,7 @@ const LawyerDashboard: React.FC = () => {
           </h1>
           <div className="flex gap-3">
             <Button variant="outline" onClick={handleCalendarView}>
-              <Calendar className="mr-2 h-4 w-4" /> View Calendar
+              <CalendarIcon className="mr-2 h-4 w-4" /> View Calendar
             </Button>
             <Button onClick={handleNewCase}>
               <Plus className="mr-2 h-4 w-4" /> New Case
@@ -131,6 +146,58 @@ const LawyerDashboard: React.FC = () => {
           <ClientDirectory clients={clients} />
         </TabsContent>
       </Tabs>
+
+      {/* Calendar Dialog */}
+      <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Calendar View</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              className="rounded-md border"
+              modifiers={{
+                appointment: (date) => dateHasAppointment(date),
+              }}
+              modifiersStyles={{
+                appointment: { fontWeight: 'bold', textDecoration: 'underline', color: 'blue' }
+              }}
+            />
+            
+            <div className="mt-6">
+              <h3 className="text-lg font-medium">
+                Appointments on {format(selectedDate, 'PPP')}
+              </h3>
+              <div className="space-y-2 mt-2">
+                {getAppointmentsForDate(selectedDate).length > 0 ? (
+                  getAppointmentsForDate(selectedDate).map(appointment => (
+                    <div key={appointment.id} className="p-2 border rounded-md">
+                      <div className="font-medium">{appointment.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {format(new Date(appointment.date), 'p')} - Client: {appointment.clientName}
+                      </div>
+                      <Badge 
+                        className={
+                          appointment.status === 'confirmed' ? 'bg-green-100 text-green-800 hover:bg-green-200 mt-1' : 
+                          appointment.status === 'cancelled' ? 'bg-red-100 text-red-800 hover:bg-red-200 mt-1' :
+                          'bg-blue-100 text-blue-800 hover:bg-blue-200 mt-1'
+                        }
+                      >
+                        {appointment.status}
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">No appointments scheduled for this day.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
