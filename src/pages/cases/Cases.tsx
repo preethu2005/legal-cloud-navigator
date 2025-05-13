@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -100,6 +100,7 @@ const Cases: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Categories derived from cases
   const categories = Array.from(new Set(mockAllCases.map(c => c.category)));
@@ -166,14 +167,16 @@ const Cases: React.FC = () => {
     }
   };
 
+  const handleNewCase = () => {
+    navigate('/cases/new');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-serif font-semibold">My Cases</h1>
-        <Button asChild>
-          <Link to="/cases/new" className="flex items-center">
-            <Plus className="mr-2 h-4 w-4" /> New Case
-          </Link>
+        <Button onClick={handleNewCase} className="flex items-center">
+          <Plus className="mr-2 h-4 w-4" /> New Case
         </Button>
       </div>
 
