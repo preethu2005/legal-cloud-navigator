@@ -3,12 +3,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Import refactored components
 import StatisticsCards from './components/lawyer/StatisticsCards';
@@ -27,7 +31,16 @@ const LawyerDashboard: React.FC = () => {
   const [appointments, setAppointments] = useState(mockAppointments);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isNewCaseOpen, setIsNewCaseOpen] = useState(false);
   const navigate = useNavigate();
+  
+  // New case form state
+  const [newCase, setNewCase] = useState({
+    title: '',
+    description: '',
+    category: '',
+    priority: 'medium'
+  });
   
   // Calculate statistics
   const activeCasesCount = cases.filter(c => c.status !== CaseStatus.CLOSED && c.status !== CaseStatus.RESOLVED).length;
@@ -65,7 +78,51 @@ const LawyerDashboard: React.FC = () => {
   };
   
   const handleNewCase = () => {
-    navigate('/cases/new');
+    setIsNewCaseOpen(true);
+  };
+  
+  const handleCreateNewCase = () => {
+    // Validate form
+    if (!newCase.title || !newCase.category) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Create new case object
+    const newCaseObj: LegalCase = {
+      id: Date.now().toString(),
+      clientId: clients.length > 0 ? clients[0].id : 'new-client',
+      title: newCase.title,
+      description: newCase.description,
+      category: newCase.category,
+      status: CaseStatus.NEW,
+      priority: newCase.priority as 'low' | 'medium' | 'high',
+      documents: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    // Add to cases
+    setCases(prev => [newCaseObj, ...prev]);
+    
+    // Close dialog and reset form
+    setIsNewCaseOpen(false);
+    setNewCase({
+      title: '',
+      description: '',
+      category: '',
+      priority: 'medium'
+    });
+    
+    // Notify user
+    toast({
+      title: "Case created",
+      description: `New case "${newCase.title}" has been created.`,
+    });
   };
 
   const getAppointmentsForDate = (date: Date) => {
@@ -195,6 +252,79 @@ const LawyerDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Case Dialog */}
+      <Dialog open={isNewCaseOpen} onOpenChange={setIsNewCaseOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Case</DialogTitle>
+            <DialogDescription>
+              Fill in the details to create a new legal case.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Case Title*</Label>
+              <Input 
+                id="title"
+                placeholder="Enter case title"
+                value={newCase.title}
+                onChange={(e) => setNewCase({...newCase, title: e.target.value})}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category*</Label>
+              <Select 
+                value={newCase.category}
+                onValueChange={(value) => setNewCase({...newCase, category: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select case category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Contract Law">Contract Law</SelectItem>
+                  <SelectItem value="Corporate Law">Corporate Law</SelectItem>
+                  <SelectItem value="Criminal Law">Criminal Law</SelectItem>
+                  <SelectItem value="Family Law">Family Law</SelectItem>
+                  <SelectItem value="Intellectual Property">Intellectual Property</SelectItem>
+                  <SelectItem value="Real Estate">Real Estate</SelectItem>
+                  <SelectItem value="Tax Law">Tax Law</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description"
+                placeholder="Enter case details"
+                rows={4}
+                value={newCase.description}
+                onChange={(e) => setNewCase({...newCase, description: e.target.value})}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select 
+                value={newCase.priority}
+                onValueChange={(value) => setNewCase({...newCase, priority: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewCaseOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateNewCase}>Create Case</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

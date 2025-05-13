@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -190,6 +191,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   const [activeCases, setActiveCases] = useState<LegalCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isNewCaseDialogOpen, setIsNewCaseDialogOpen] = useState(false);
   const [userName, setUserName] = useState<string>("User");
   const navigate = useNavigate();
 
@@ -199,6 +201,13 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
     time: '09:00',
     lawyerName: userRole === 'client' ? '' : 'N/A',
     clientName: userRole === 'lawyer' ? '' : 'N/A',
+  });
+  
+  const [newCase, setNewCase] = useState({
+    title: '',
+    description: '',
+    category: '',
+    priority: 'medium'
   });
   
   const [editingAppointment, setEditingAppointment] = useState<string | null>(null);
@@ -358,7 +367,51 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   };
 
   const handleNewCase = () => {
-    navigate('/cases/new');
+    setIsNewCaseDialogOpen(true);
+  };
+  
+  const handleCreateNewCase = () => {
+    // Validate form
+    if (!newCase.title || !newCase.category) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Create new case object
+    const newCaseObj = {
+      id: Date.now().toString(),
+      clientId: '123',
+      title: newCase.title,
+      description: newCase.description,
+      category: newCase.category,
+      status: CaseStatus.NEW,
+      priority: newCase.priority as 'low' | 'medium' | 'high',
+      documents: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    // Add to cases
+    setActiveCases(prev => [newCaseObj, ...prev]);
+    
+    // Close dialog and reset form
+    setIsNewCaseDialogOpen(false);
+    setNewCase({
+      title: '',
+      description: '',
+      category: '',
+      priority: 'medium'
+    });
+    
+    // Notify user
+    toast({
+      title: "Case created",
+      description: `New case "${newCase.title}" has been created.`,
+    });
   };
 
   return (
@@ -843,6 +896,79 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* New Case Dialog */}
+      <Dialog open={isNewCaseDialogOpen} onOpenChange={setIsNewCaseDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Case</DialogTitle>
+            <DialogDescription>
+              Fill in the details to create a new legal case.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Case Title*</Label>
+              <Input 
+                id="title"
+                placeholder="Enter case title"
+                value={newCase.title}
+                onChange={(e) => setNewCase({...newCase, title: e.target.value})}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category*</Label>
+              <Select 
+                value={newCase.category}
+                onValueChange={(value) => setNewCase({...newCase, category: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select case category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Contract Law">Contract Law</SelectItem>
+                  <SelectItem value="Corporate Law">Corporate Law</SelectItem>
+                  <SelectItem value="Criminal Law">Criminal Law</SelectItem>
+                  <SelectItem value="Family Law">Family Law</SelectItem>
+                  <SelectItem value="Intellectual Property">Intellectual Property</SelectItem>
+                  <SelectItem value="Real Estate">Real Estate</SelectItem>
+                  <SelectItem value="Tax Law">Tax Law</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description"
+                placeholder="Enter case details"
+                rows={4}
+                value={newCase.description}
+                onChange={(e) => setNewCase({...newCase, description: e.target.value})}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select 
+                value={newCase.priority}
+                onValueChange={(value) => setNewCase({...newCase, priority: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewCaseDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateNewCase}>Create Case</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
