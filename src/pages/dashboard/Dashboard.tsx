@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -191,6 +191,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [userName, setUserName] = useState<string>("User");
+  const navigate = useNavigate();
 
   const [newAppointment, setNewAppointment] = useState({
     title: '',
@@ -356,6 +357,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
     }
   };
 
+  const handleNewCase = () => {
+    navigate('/cases/new');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex flex-col mb-8">
@@ -366,10 +371,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole = 'client' }) => {
           Welcome, {userName}
         </h2>
         <div className="flex flex-wrap gap-4">
-          <Button asChild>
-            <Link to="/cases/new" className="flex items-center">
-              <Plus className="mr-2 h-4 w-4" /> New Case
-            </Link>
+          <Button onClick={handleNewCase} className="flex items-center">
+            <Plus className="mr-2 h-4 w-4" /> New Case
           </Button>
           <Button variant="outline" onClick={handleManageAppointments} className="flex items-center">
             <Calendar className="mr-2 h-4 w-4" /> Manage Appointments

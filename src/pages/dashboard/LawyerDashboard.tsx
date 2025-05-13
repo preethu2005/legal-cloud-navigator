@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -26,6 +27,7 @@ const LawyerDashboard: React.FC = () => {
   const [appointments, setAppointments] = useState(mockAppointments);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const navigate = useNavigate();
   
   // Calculate statistics
   const activeCasesCount = cases.filter(c => c.status !== CaseStatus.CLOSED && c.status !== CaseStatus.RESOLVED).length;
@@ -63,10 +65,7 @@ const LawyerDashboard: React.FC = () => {
   };
   
   const handleNewCase = () => {
-    toast({
-      title: "New Case Feature Coming Soon",
-      description: "The new case creation functionality is currently under development.",
-    });
+    navigate('/cases/new');
   };
 
   const getAppointmentsForDate = (date: Date) => {
